@@ -1,7 +1,9 @@
 from __future__ import division, print_function
+import sys
 import copy
 import smtplib
 import ssl
+import urllib
 from config import *
 
 from email.mime.multipart import MIMEMultipart
@@ -68,12 +70,16 @@ def all_bugs(bugs_dict):
 
 
 def get_bug_url_link(bug_ids):
-    return (
+    bz_url = (
         "https://bugzilla.redhat.com/buglist.cgi?bug_id={}".format(
             ','.join(bug_ids)
         )
     )
-
+    return (
+        urllib.urlopen(
+            "http://url.corp.redhat.com/new?{}".format(bz_url)
+        ).read()
+    )
 
 def report_needinfos():
     team_bugs = []
@@ -102,8 +108,9 @@ def report_needinfos():
         )
 
 
-def report_status_on_qa():
-    on_qa = get_on_qa_bugs()
+
+def report_status_on_qa(version):
+    on_qa = get_on_qa_bugs(version=version)
     total_on_qa = len(on_qa)
     bug_id_list = [str(bug.id) for bug in on_qa]
     short_url = get_bug_url_link(bug_id_list)
@@ -122,7 +129,7 @@ def report_new_arrivals():
     print(
         "<h3>New arrivals (weekly): {}</h3>".format(total_new)
     )
-    for comp, bugs in new_bugs.items():
+    for comp, bugs in new_bugs.iteritems():
         bug_id_list = []
         bugs.sort(key=lambda x: severity[x.bug_severity])
         if bugs:
@@ -141,7 +148,6 @@ def report_new_arrivals():
             link = "<a href='{}' target='_blank'>here".format(bug_link)
             print("<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link))
 
-
 def report_resolved_bugs():
     resolved_bugs = get_resolved_bugs()
     resolved_bugs = filter_by_component(resolved_bugs)
@@ -150,16 +156,15 @@ def report_resolved_bugs():
         "<h3>Resolved bugs (weekly): {}</h3>".format(total_new)
     )
 
-
-def report_open_blockers():
-    open_blockers = get_open_blockers()
+def report_open_blockers(version):
+    open_blockers = get_open_blockers(version=version)
     open_blockers = filter_by_status(open_blockers, OPEN_BUGS)
     open_blockers = filter_by_component(open_blockers)
     total_blockers = len(all_bugs(open_blockers))
     print(
         "<h3>Open Blocker+: {}</h3>".format(total_blockers)
     )
-    for comp, bugs in open_blockers.items():
+    for comp, bugs in open_blockers.iteritems():
         bug_id_list = []
         bugs.sort(key=lambda x: severity[x.bug_severity])
         if bugs:
@@ -179,15 +184,16 @@ def report_open_blockers():
             print("<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link))
 
 
-def report_open_candidate_blockers():
-    open_blockers = get_open_candidate_blockers()
+def report_open_candidate_blockers(version):
+    open_blockers = get_open_candidate_blockers(version=version)
     open_blockers = filter_by_status(open_blockers, OPEN_BUGS)
     open_blockers = filter_by_component(open_blockers)
     total_blockers = len(all_bugs(open_blockers))
     print(
         "<h3>Open Blocker?: {}</h3>".format(total_blockers)
     )
-    for comp, bugs in open_blockers.items():
+
+    for comp, bugs in open_blockers.iteritems():
         bug_id_list = []
         bugs.sort(key=lambda x: severity[x.bug_severity])
         if bugs:
@@ -205,11 +211,52 @@ def report_open_candidate_blockers():
             link = "<a href='{}' target='_blank'>here".format(bug_link)
             print("<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link))
 
-
 def filter_by_component(bugs, verify_status=True):
     bugs_by_comp = copy.deepcopy(COMPONENTS)
     for bug in bugs:
         if verify_status and not (
+
+def report_missing_acks(version, team=all_team):
+    def print_report(team_bugs):
+        bug_list = []
+        for bug in team_bugs:
+            try:
+                print(
+                    "<li>Bug {} [{}]: {}</li>".format(
+                        bug.bug_id, bug.qa_contact.split("@")[0], bug.short_desc
+                    )
+                )
+                bug_list.append(str(bug.id))
+            except AttributeError as ex:
+                print("No needinfo contact for bug {}".format(bug.id))
+
+        short_url = get_bug_url_link(bug_list)
+        link = "<a href='{}' target='_blank'>here".format(short_url)
+        print(
+            "<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link)
+        )
+    missing_acks = get_missing_acks(version=version)
+    total_missing_acks = len(missing_acks)
+    if team == all_team and total_missing_acks > 0:
+        team_bugs = filter_by_team(bugs=missing_acks)
+        for team, bugs in team_bugs.iteritems():
+            bug_id_list = [str(bug.id) for bug in bugs]
+            short_url = get_bug_url_link(bug_id_list)
+            link = ""
+            if len(bug_id_list) > 0:
+                link = "<a href='{}' target='_blank'>(Link)".format(short_url)
+                print(
+                    "<u><b><ul style='padding-left:10px;'>Team {} total "
+                    "missing acks: {} - "
+                    "</ul></b></u>".format(team, len(bugs), link)
+                )
+                print_report(bugs)
+
+
+def filter_by_component(bugs):
+    bugs_by_comp = copy.deepcopy(COMPONENTS)
+    for bug in bugs:
+        if not (
             bug.status in OPEN_BUGS or bug.status in (
                 VERIFIED or bug.status in ON_QA
             )
@@ -234,7 +281,7 @@ def filter_by_team(bugs):
         try:
             qa_contact = bug.qa_contact_detail['email'].split('@')[0]
             if qa_contact in all_members():
-                for team, members in teams.items():
+                for team, members in teams.iteritems():
                     if qa_contact in members:
                         bugs_by_team[team].append(bug)
         except AttributeError as ex:
@@ -272,7 +319,7 @@ def report_on_qa_blockers():
                 "<p>&emsp;&emsp;&emsp;Link to bugs: {}</p>".format(link)
             )
 
-    on_qa_blockers = get_on_qa_blockers()
+    on_qa_blockers = get_on_qa_blockers(version=version)
     total_on_qa_blockers = len(on_qa_blockers)
     bug_id_list = [str(bug.id) for bug in on_qa_blockers]
     short_url = get_bug_url_link(bug_id_list)
