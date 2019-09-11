@@ -3,6 +3,7 @@ import yaml
 import sys
 import os
 import google_api as gapi
+from personal_config import *
 
 # # [CHANGE NEEDED] Add the relevant information for you report
 cfg_path = os.path.expanduser('~/.gapi/personal_cfg.yml')
