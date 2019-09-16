@@ -211,10 +211,10 @@ def report_open_candidate_blockers(version):
             link = "<a href='{}' target='_blank'>here".format(bug_link)
             print("<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link))
 
-def filter_by_component(bugs, verify_status=True):
-    bugs_by_comp = copy.deepcopy(COMPONENTS)
-    for bug in bugs:
-        if verify_status and not (
+# def filter_by_component(bugs, verify_status=True):
+#     bugs_by_comp = copy.deepcopy(COMPONENTS)
+#     for bug in bugs:
+#         if verify_status and not (
 
 def report_missing_acks(version, team=all_team):
     def print_report(team_bugs):
