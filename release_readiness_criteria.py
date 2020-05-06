@@ -27,8 +27,14 @@ g.update_sheet(6, 8, regressions)
 untriaged = len(get_untriaged_bugs(BUGZILLA_VERSION_FLAG))
 g.update_sheet(6, 9, untriaged)
 
-dec_bugs = len(get_doc_bugs())
-g.update_sheet(6, 10, dec_bugs)
+untargeted = len(get_untargeted_bugs(BUGZILLA_VERSION_FLAG))
+g.update_sheet(6,10, untargeted)
+
+doc_bugs = len(get_doc_bugs())
+g.update_sheet(6, 11, doc_bugs)
+
+overall_backlog = len(get_overall_backlog())
+g.update_sheet(6, 12, overall_backlog)
 
 # Sleep to ensure no exception will raise from Google API due to writes limit
 time.sleep(40)
