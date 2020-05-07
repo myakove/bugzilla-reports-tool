@@ -12,9 +12,10 @@ post = filter_by_status(dev_backlog, 'POST')
 modified = filter_by_status(dev_backlog, 'MODIFIED')
 
 qe_backlog = get_qe_backlog()
+overall_backlog = get_overall_backlog()
 g.insert_row(
     [
          now.strftime("%Y-%m-%d"), len(new), len(assigned),
-         len(post), len(modified), len(qe_backlog)
+         len(post), len(modified), len(qe_backlog), len(overall_backlog)
     ]
 )
