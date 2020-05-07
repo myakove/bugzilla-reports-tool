@@ -979,6 +979,64 @@ def get_stability_bugs(version=BUGZILLA_VERSION_FLAG):
     bugs = filter_by_status(bugs, OPEN_BUGS_LIST)
     return bugs
 
+def get_blockers_list():
+    query = {
+        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_QA",
+        "f10" : "keywords",
+        "f11" : "keywords",
+        "f12" : "flagtypes.name",
+        "f3" : "OP",
+        "f6" : "CP",
+        "f8" : "flagtypes.name",
+        "include_fields" : [
+            "id",
+            "component",
+            "status",
+            "summary",
+            "flags",
+            "keywords"
+        ],
+        "j5" : "OR",
+        "j_top" : "OR",
+        "o10" : "substring",
+        "o11" : "substring",
+        "o12" : "anywordssubstr",
+        "o8" : "anywordssubstr",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : VERSION,
+        "v10" : "TestBlocker",
+        "v11" : "AutomationBlocker",
+        "v12" : "blocker?",
+        "v8" : "blocker+"
+    }
+    bugs = bzapi.query(query)
+    return bugs
+
+def get_urgent_list():
+    query = {
+        "bug_severity" : "urgent",
+        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_QA",
+        "f3" : "OP",
+        "f6" : "CP",
+        "include_fields" : [
+            "id",
+            "component",
+            "status",
+            "summary",
+            "flags",
+            "keywords"
+        ],
+        "j5" : "OR",
+        "keywords" : "FutureFeature, Improvement, ",
+        "keywords_type" : "nowords",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : VERSION
+    }
+    bugs = bzapi.query(query)
+    return bugs
+
 def get_gss_closed_loop(flag, status=""):
     query = {
         "bug_status": status,
