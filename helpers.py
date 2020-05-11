@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+import sys
 import copy
 import smtplib
 import ssl
@@ -74,7 +75,6 @@ def get_bug_url_link(bug_ids):
         )
     )
 
-
 def report_needinfos():
     team_bugs = []
     needinfos = get_needinfos_bugs()
@@ -102,8 +102,9 @@ def report_needinfos():
         )
 
 
-def report_status_on_qa():
-    on_qa = get_on_qa_bugs()
+
+def report_status_on_qa(version):
+    on_qa = get_on_qa_bugs(version=version)
     total_on_qa = len(on_qa)
     bug_id_list = [str(bug.id) for bug in on_qa]
     short_url = get_bug_url_link(bug_id_list)
@@ -122,7 +123,7 @@ def report_new_arrivals():
     print(
         "<h3>New arrivals (weekly): {}</h3>".format(total_new)
     )
-    for comp, bugs in new_bugs.items():
+    for comp, bugs in new_bugs.iteritems():
         bug_id_list = []
         bugs.sort(key=lambda x: severity[x.bug_severity])
         if bugs:
@@ -141,7 +142,6 @@ def report_new_arrivals():
             link = "<a href='{}' target='_blank'>here".format(bug_link)
             print("<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link))
 
-
 def report_resolved_bugs():
     resolved_bugs = get_resolved_bugs()
     resolved_bugs = filter_by_component(resolved_bugs)
@@ -150,16 +150,15 @@ def report_resolved_bugs():
         "<h3>Resolved bugs (weekly): {}</h3>".format(total_new)
     )
 
-
-def report_open_blockers():
-    open_blockers = get_open_blockers()
+def report_open_blockers(version):
+    open_blockers = get_open_blockers(version=version)
     open_blockers = filter_by_status(open_blockers, OPEN_BUGS)
     open_blockers = filter_by_component(open_blockers)
     total_blockers = len(all_bugs(open_blockers))
     print(
         "<h3>Open Blocker+: {}</h3>".format(total_blockers)
     )
-    for comp, bugs in open_blockers.items():
+    for comp, bugs in open_blockers.iteritems():
         bug_id_list = []
         bugs.sort(key=lambda x: severity[x.bug_severity])
         if bugs:
@@ -179,15 +178,16 @@ def report_open_blockers():
             print("<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link))
 
 
-def report_open_candidate_blockers():
-    open_blockers = get_open_candidate_blockers()
+def report_open_candidate_blockers(version):
+    open_blockers = get_open_candidate_blockers(version=version)
     open_blockers = filter_by_status(open_blockers, OPEN_BUGS)
     open_blockers = filter_by_component(open_blockers)
     total_blockers = len(all_bugs(open_blockers))
     print(
         "<h3>Open Blocker?: {}</h3>".format(total_blockers)
     )
-    for comp, bugs in open_blockers.items():
+
+    for comp, bugs in open_blockers.iteritems():
         bug_id_list = []
         bugs.sort(key=lambda x: severity[x.bug_severity])
         if bugs:
@@ -205,11 +205,62 @@ def report_open_candidate_blockers():
             link = "<a href='{}' target='_blank'>here".format(bug_link)
             print("<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link))
 
-
 def filter_by_component(bugs, verify_status=True):
     bugs_by_comp = copy.deepcopy(COMPONENTS)
     for bug in bugs:
         if verify_status and not (
+            bug.status in OPEN_BUGS or bug.status in (
+                VERIFIED or bug.status in ON_QA
+            )
+        ):
+            continue
+        if bug.component in bugs_by_comp:
+            bugs_by_comp[bug.component].append(bug)
+        else:
+            continue
+    return bugs_by_comp
+
+def report_missing_acks(version, team=all_team):
+    def print_report(team_bugs):
+        bug_list = []
+        for bug in team_bugs:
+            try:
+                print(
+                    "<li>Bug {} [{}]: {}</li>".format(
+                        bug.bug_id, bug.qa_contact.split("@")[0], bug.short_desc
+                    )
+                )
+                bug_list.append(str(bug.id))
+            except AttributeError as ex:
+                print("No needinfo contact for bug {}".format(bug.id))
+
+        short_url = get_bug_url_link(bug_list)
+        link = "<a href='{}' target='_blank'>here".format(short_url)
+        print(
+            "<p>&nbsp;&nbsp;&nbsp;Link to bugs: {}</p>".format(link)
+        )
+    missing_acks = get_missing_acks(version=version)
+    total_missing_acks = len(missing_acks)
+    if team == all_team and total_missing_acks > 0:
+        team_bugs = filter_by_team(bugs=missing_acks)
+        for team, bugs in team_bugs.iteritems():
+            bug_id_list = [str(bug.id) for bug in bugs]
+            short_url = get_bug_url_link(bug_id_list)
+            link = ""
+            if len(bug_id_list) > 0:
+                link = "<a href='{}' target='_blank'>(Link)".format(short_url)
+                print(
+                    "<u><b><ul style='padding-left:10px;'>Team {} total "
+                    "missing acks: {} - "
+                    "</ul></b></u>".format(team, len(bugs), link)
+                )
+                print_report(bugs)
+
+
+def filter_by_component(bugs):
+    bugs_by_comp = copy.deepcopy(COMPONENTS)
+    for bug in bugs:
+        if not (
             bug.status in OPEN_BUGS or bug.status in (
                 VERIFIED or bug.status in ON_QA
             )
@@ -234,7 +285,7 @@ def filter_by_team(bugs):
         try:
             qa_contact = bug.qa_contact_detail['email'].split('@')[0]
             if qa_contact in all_members():
-                for team, members in teams.items():
+                for team, members in teams.iteritems():
                     if qa_contact in members:
                         bugs_by_team[team].append(bug)
         except AttributeError as ex:
@@ -272,7 +323,7 @@ def report_on_qa_blockers():
                 "<p>&emsp;&emsp;&emsp;Link to bugs: {}</p>".format(link)
             )
 
-    on_qa_blockers = get_on_qa_blockers()
+    on_qa_blockers = get_on_qa_blockers(version=version)
     total_on_qa_blockers = len(on_qa_blockers)
     bug_id_list = [str(bug.id) for bug in on_qa_blockers]
     short_url = get_bug_url_link(bug_id_list)
@@ -391,7 +442,7 @@ def get_blocker_arrivals(version=VERSION, changed_from='-1w', changed_to="Now"):
 
 
 def get_resolved_bugs(
-    version=BUGZILLA_VERSION_FLAG, changed_from='-1w', changed_to="Now"
+    version=VERSION, changed_from='-1w', changed_to="Now"
 ):
     query = {
         "bug_status": "",
@@ -423,7 +474,6 @@ def get_qe_backlog():
         "classification" : "Red Hat",
         "query_format": "advanced",
         "product": BUGZILLA_PRODUCT,
-        # "target_release": BUGZILLA_VERSION_FLAG
         "target_release": VERSION,
         "include_fields": [
             "id",
@@ -462,7 +512,7 @@ def get_bugs_per_member(
     return bugs
 
 
-def get_dev_backlog(version):
+def get_dev_backlog(version=VERSION):
     query = {
 
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV",
@@ -473,7 +523,7 @@ def get_dev_backlog(version):
         "o7" : "equals",
         "product" : BUGZILLA_PRODUCT,
         "query_format" : "advanced",
-        "target_release" : VERSION,
+        "target_release" : version,
         "v7" : "Documentation",
         "include_fields": [
             "id",
@@ -539,7 +589,7 @@ def get_regression_bugs():
     return bugs
 
 
-def get_untriaged_bugs(version_flag):
+def get_untriaged_bugs(version=VERSION):
     query = {
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA,VERIFIED,RELEASE_PENDING",
         "classification" : "Red Hat",
@@ -552,7 +602,7 @@ def get_untriaged_bugs(version_flag):
         "o3" : "notequals",
         "product" : BUGZILLA_PRODUCT,
         "query_format" : "advanced",
-        "target_release" : VERSION,
+        "target_release" : version,
         "v1" : "devel_ack+",
         "v2" : "pm_ack+",
         "v3" : "qa_ack+",
@@ -624,7 +674,7 @@ def get_scale_blockers():
     return bugs
 
 
-def get_overall_backlog(version=''):
+def get_overall_backlog(version=VERSION):
     query = {
         "action" : "wrap",
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA",
@@ -637,20 +687,21 @@ def get_overall_backlog(version=''):
     return bugs
 
 
-def get_all_bugs_in_version(version=''):
+def get_all_bugs_in_version(version=VERSION):
     query = {
-        "action": "wrap",
-        "classification": "Red Hat",
-        "bug_status": "__open__,__closed__",
-        "f3": "OP",
-        "f6": "CP",
-        "j3": "OR",
-        "query_format": "advanced",
-        "product": BUGZILLA_PRODUCT,
-        "f8": "component",
-        "o8": "notsubstring",
-        "v8": "documentation",
-        "version": version,
+        "action" : "wrap",
+        "classification" : "Red Hat",
+        "f0" : "OP",
+        "f2" : "CP",
+        "f3" : "component",
+        "f4" : "component",
+        "o3" : "notequals",
+        "o4" : "notequals",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "v3" : "Documentation",
+        "v4" : "Release",
+        "version" : version,
         "include_fields": [
             "id",
             "status",
@@ -660,23 +711,21 @@ def get_all_bugs_in_version(version=''):
     return bugs
 
 
-def get_all_bugs_targeted_to_version(version=BUGZILLA_VERSION_FLAG):
+def get_all_bugs_targeted_to_version(version=VERSION):
     query = {
-        "action": "wrap",
-        "classification": "Red Hat",
-        "bug_status": "__open__,__closed__",
-        "f3": "OP",
-        "f6": "CP",
-        "j3": "OR",
-        "query_format": "advanced",
-        "product": BUGZILLA_PRODUCT,
-        "f8": "component",
-        "o8": "notsubstring",
-        "v8": "documentation",
-        "f9": "flagtypes.name",
-        "o9": "substring",
-        "v9": version,
-        "include_fields": [
+        "classification" : "Red Hat",
+        "f0" : "OP",
+        "f2" : "CP",
+        "f3" : "component",
+        "f4" : "component",
+        "o3" : "notequals",
+        "o4" : "notequals",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : version,
+         "v3" : "Documentation",
+         "v4" : "Release",
+         "include_fields": [
             "id",
             "status",
         ],
@@ -684,8 +733,7 @@ def get_all_bugs_targeted_to_version(version=BUGZILLA_VERSION_FLAG):
     bugs = bzapi.query(query)
     return bugs
 
-
-def get_all_regression_bugs(version=''):
+def get_all_regression_bugs(version=VERSION):
     query = {
         "action": "wrap",
         "bug_status": "__open__,__closed__",
@@ -713,7 +761,7 @@ def get_all_regression_bugs(version=''):
     return bugs
 
 
-def get_all_failedqa_bugs(version=''):
+def get_all_failedqa_bugs(version=VERSION):
     query = {
         "action": "wrap",
         "bug_status": "__open__,__closed__",
@@ -742,33 +790,34 @@ def get_all_failedqa_bugs(version=''):
     return bugs
 
 
-def get_all_verified_bugs(version=''):
+def get_all_verified_bugs(version=VERSION):
     query = {
-        "bug_status": "VERIFIED,RELEASE_PENDING,CLOSED",
-        "f3": "OP",
-        "f4": "product",
-        "f6": "CP",
-        "f7": "bug_status",
-        "j3": "OR",
-        "o4": "equals",
-        "o7": "changedto",
-        "query_format": "advanced",
-        "v4": BUGZILLA_PRODUCT,
-        "v7": "VERIFIED",
-        "f9": "flagtypes.name",
-        "o9": "substring",
-        "v9": version,
-        "include_fields": [
-            "id",
-            "status",
-        ],
+        "bug_status" : "",
+        "chfield" : "bug_status",
+        "chfieldto" : "Now",
+        "chfieldvalue" : "ON_QA",
+        "classification" : "Red Hat",
+        "f0" : "OP",
+        "f1" : "bug_status",
+        "f2" : "CP",
+        "f3" : "bug_status",
+        "f4" : "bug_status",
+        "j_top" : "OR",
+        "o1" : "equals",
+        "o3" : "equals",
+        "o4" : "equals",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : version,
+        "v1" : "CLOSED",
+        "v3" : "VERIFIED",
+        "v4" : "RELEASE_PENDING"
     }
     bugs = bzapi.query(query)
     return bugs
 
-
 def get_verified_bugs(
-    version=BUGZILLA_VERSION_FLAG, changed_from='-1w', changed_to='Now'
+    version=VERSION, changed_from='-1w', changed_to='Now'
 ):
     query = {
         "bug_status": "",
@@ -793,6 +842,22 @@ def get_verified_bugs(
     bugs = bzapi.query(query)
     return bugs
 
+def get_all_rejected_bugs(version=VERSION):
+    query = {
+        "bug_status" : "CLOSED",
+        "f1" : "component",
+        "f2" : "component",
+        "o1" : "notequals",
+        "o2" : "notequals",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "resolution" : "EOL",
+        "v1" : "Documentation",
+        "v2" : "Release",
+        "version" : version
+    }
+    bugs = bzapi.query(query)
+    return bugs
 
 def get_changed_bugs_in_the_past_x_time(time='-1h'):
     query = {
@@ -824,32 +889,88 @@ def get_quality_score(bug):
     return -1
 
 
-def get_all_ready_for_testing_bugs(version=''):
+def get_all_was_on_qa_bugs(version=VERSION):
     query = {
-        "bug_status": "",
-        "f3": "OP",
-        "f4": "product",
-        "f6": "CP",
-        "f7": "bug_status",
-        "j3": "OR",
-        "keywords": "Reopened",
-        "keywords_type": "nowords",
-        "o4": "equals",
-        "o7": "changedto",
-        "query_format": "advanced",
-        "v4": BUGZILLA_PRODUCT,
-        "v7": "ON_QA",
-        "f9": "flagtypes.name",
-        "o9": "substring",
-        "v9": version,
-        "include_fields": [
-            "id",
-            "status",
-        ],
+        "chfield" : "bug_status",
+        "chfieldto" : "Now",
+        "chfieldvalue" : "ON_QA",
+        "classification" : "Red Hat",
+        "f0" : "OP",
+        "f2" : "CP",
+        "f3" : "component",
+        "f4" : "component",
+        "o3" : "notequals",
+        "o4" : "notequals",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "v3" : "Documentation",
+        "v4" : "Release",
+        "target_release" : version,
     }
     bugs = bzapi.query(query)
     return bugs
 
+def get_all_failedqa_bugs(version=VERSION):
+    query = {
+        "bug_status" : "",
+        "f1" : "bug_status",
+        "f2" : "OP",
+        "f3" : "bug_status",
+        "f4" : "bug_status",
+        "f5" : "bug_status",
+        "f6" : "bug_status",
+        "j2" : "OR",
+        "o1" : "changedfrom",
+        "o3" : "changedto",
+        "o4" : "changedto",
+        "o5" : "changedto",
+        "o6" : "changedto",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : version,
+        "v1" : "ON_QA",
+        "v3" : "NEW",
+        "v4" : "ASSIGNED",
+        "v5" : "POST",
+        "v6" : "MODIFIED"
+    }
+    bugs = bzapi.query(query)
+    return bugs
+
+def get_all_reopened_bugs(version=VERSION):
+    query = {
+        "bug_status" : "",
+        "f10" : "bug_status",
+        "f2" : "OP",
+        "f3" : "bug_status",
+        "f4" : "bug_status",
+        "f5" : "bug_status",
+        "f6" : "bug_status",
+        "f7" : "OP",
+        "f8" : "bug_status",
+        "f9" : "bug_status",
+        "j2" : "OR",
+        "j7" : "OR",
+        "o10" : "changedfrom",
+        "o3" : "changedto",
+        "o4" : "changedto",
+        "o5" : "changedto",
+        "o6" : "changedto",
+        "o8" : "changedfrom",
+        "o9" : "changedfrom",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "v10" : "CLOSED",
+        "v3" : "NEW",
+        "v4" : "ASSIGNED",
+        "v5" : "POST",
+        "v6" : "MODIFIED",
+        "v8" : "VERIFIED",
+        "v9" : "RELEASE_PENDING",
+        "version" : version
+    }
+    bugs = bzapi.query(query)
+    return bugs
 
 def get_on_qa_bugs():
     query = BASE_QUERY.copy()
@@ -910,7 +1031,7 @@ def get_on_qa_blockers():
     return filter_only_bugs(bugs)
 
 
-def get_deployment_blockers(version=BUGZILLA_VERSION_FLAG):
+def get_deployment_blockers(version=VERSION):
     query = {
         "bug_status": "NEW,ASSIGNED,POST,MODIFIED",
         "f3": "OP",
@@ -934,7 +1055,7 @@ def get_deployment_blockers(version=BUGZILLA_VERSION_FLAG):
     return bugs
 
 
-def get_feature_blockers(version=BUGZILLA_VERSION_FLAG):
+def get_feature_blockers(version=VERSION):
     query = {
         "bug_status": "NEW,ASSIGNED,POST,MODIFIED",
         "f3": "OP",
@@ -957,7 +1078,7 @@ def get_feature_blockers(version=BUGZILLA_VERSION_FLAG):
     return bugs
 
 
-def get_stability_bugs(version=BUGZILLA_VERSION_FLAG):
+def get_stability_bugs(version=VERSION):
     query = {
         "bug_status": "NEW,ASSIGNED,POST,MODIFIED",
         "f3": "OP",
@@ -1058,7 +1179,7 @@ def get_gss_closed_loop(flag, status=""):
     bugs = bzapi.query(query)
     return filter_only_bugs(bugs)
 
-def get_untargeted_bugs(version=BUGZILLA_VERSION_FLAG):
+def get_untargeted_bugs():
     query = {
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA,VERIFIED",
         "classification" : "Red Hat",
