@@ -888,6 +888,17 @@ def get_quality_score(bug):
         return int(qa_wb[score_idx:score_idx + 3])
     return -1
 
+def get_num_of_closed_bugs_by_resolution_and_component(component, resolution, version=VERSION):
+    query = {
+        "bug_status" : "CLOSED",
+        "component" : component,
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "resolution" : resolution,
+        "version" : version
+    }
+    bugs = bzapi.query(query)
+    return len(bugs)
 
 def get_all_was_on_qa_bugs(version=VERSION):
     query = {
@@ -1004,7 +1015,6 @@ def get_open_blockers():
     bugs = filter_by_status(bugs, OPEN_BUGS_LIST_WITH_QA)
     return bugs
 
-
 def get_open_candidate_blockers():
     query = {
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_QA",
@@ -1021,7 +1031,6 @@ def get_open_candidate_blockers():
     bugs = bzapi.query(query)
     bugs = filter_by_status(bugs, OPEN_BUGS_LIST)
     return bugs
-
 
 def get_on_qa_blockers():
     query = BASE_QUERY.copy()
