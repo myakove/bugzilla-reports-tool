@@ -1,9 +1,6 @@
 #!/usr/bin/env python
-<<<<<<< 7f8cda9a31e7bd66a945da3b0100465de55d9a5b
 import time
-=======
 import google_api as gapi
->>>>>>> Add user pass
 from helpers import *
 import datetime
 
@@ -13,7 +10,7 @@ g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "Release Readiness Criteria")
 qe_backlog = len(get_qe_backlog())
 g.update_sheet(6, 3, qe_backlog)
 
-dev_backlog = len(get_dev_backlog(BUGZILLA_VERSION_FLAG))
+dev_backlog = len(get_dev_backlog())
 g.update_sheet(6, 4, dev_backlog)
 
 blockers = len(get_open_blockers())
@@ -28,10 +25,10 @@ g.update_sheet(6, 7, critical_bugs)
 regressions = len(get_regression_bugs())
 g.update_sheet(6, 8, regressions)
 
-untriaged = len(get_untriaged_bugs(BUGZILLA_VERSION_FLAG))
+untriaged = len(get_untriaged_bugs())
 g.update_sheet(6, 9, untriaged)
 
-untargeted = len(get_untargeted_bugs(BUGZILLA_VERSION_FLAG))
+untargeted = len(get_untargeted_bugs())
 g.update_sheet(6,10, untargeted)
 
 doc_bugs = len(get_doc_bugs())
@@ -64,46 +61,51 @@ for idx, bug in enumerate(top_10_bugs):
     )
     g.update_sheet(row, column + 9, (now - converted).days)
 
-# Regression rate
-all_bugs = len(get_all_bugs_in_version(version=VERSION))
-all_regressions = len(get_all_regression_bugs(version=VERSION))
-if all_bugs > 0:
-    regression_rate = round((all_regressions / float(all_bugs)), 4)
-    g.update_sheet(10, 2, regression_rate)
+# # Regression rate = all bugs with REGRESSION keyword / all bugs in version
+# all_bugs = len(get_all_bugs_in_version())
+# all_regressions = len(get_all_regression_bugs())
+# if all_bugs > 0:
+#     regression_rate = round((all_regressions / float(all_bugs)), 4)
+#     g.update_sheet(10, 2, regression_rate)
+#     g.update_sheet(10, 4, all_regressions)
 
-# FailedQA rate
-all_bug_to_version = get_all_bugs_targeted_to_version()
-all_failed_qa = get_all_failedqa_bugs(version=BUGZILLA_VERSION_FLAG)
-failed_qa_count = 0
-for bz in all_failed_qa:
-    failed_qa_count += str(bz.get_history_raw()).count(
-        "'removed': 'ON_QA', 'added': 'ASSIGNED'"
-    )
-fixed_bugs = 0
-for bz in all_bug_to_version:
-    fixed_bugs += str(bz.get_history_raw()).count("'added': 'ON_QA'")
-if fixed_bugs > 0:
-    failed_qa_rate = round((failed_qa_count / float(fixed_bugs)), 4)
-    g.update_sheet(13, 2, failed_qa_rate)
-# Verification rate
-all_verified = len(get_all_verified_bugs(version=BUGZILLA_VERSION_FLAG))
-all_ready_for_testing = len(get_all_ready_for_testing_bugs(
-    version=BUGZILLA_VERSION_FLAG
-))
-if all_ready_for_testing > 0:
-    failed_qa_rate = round((all_verified / float(all_ready_for_testing)), 4)
-    g.update_sheet(16, 2, failed_qa_rate)
+# # FailedQA = MOVED FROM ON_QA to ON DEV / ALL BUGS targeted
+# all_targeted_bugs = len(get_all_bugs_targeted_to_version())
+# all_failedqa_bugs =  len(get_all_failedqa_bugs())
+# if all_bug_to_version > 0:
+#     print(all_targeted_bugs)
+#     failed_qa_rate = round(all_failedqa_bugs / all_targeted_bugs)
+#     g.update_sheet(13, 2, failed_qa_rate)
+#     g.update_sheet(13, 4, all_failedqa_bugs)
 
-# Verification rate weekly
-verified_weekly = 0
-for c_from, c_to in [
-    ('-1w', 'Now'), ('-2w', '-1w'), ('-3w', '-2w'), ('-4w', '-3w'),
-    ('-5w', '-4w'), ('-6w', '-5w'), ('-7w', '-6w'), ('-8w', '-7w')
-]:
-    this_week = len(get_verified_bugs(
-        changed_from=c_from, changed_to=c_to
-    ))
-    verified_weekly += this_week
-g.update_sheet(19, 2, verified_weekly / 8)
+# # Verification rate = VERIFIED+RELEASE PENDING+CLOSED / was ON QA
+# all_bugs_was_on_qa = len(get_all_was_on_qa_bugs())
+# all_verified = len(get_all_verified_bugs())
+# if all_bugs_was_on_qa > 0:
+#     verification_rate = round((all_verified / float(all_bugs_was_on_qa)), 4)
+#     g.update_sheet(16, 2, verification_rate)
+#     g.update_sheet(16, 4, all_verified)
+
+# # Rejected = CLOSED (NOT A BUG, WORKS FOR ME, DUPLICATE, INSOFFICIENT DATA, EOL, DEFFERED. CANT FIX, WONT FIX) / ALL BUGS
+# all_bugs = len(get_all_bugs_in_version())
+# all_rejected = len(get_all_rejected_bugs())  # QUERY DOESNT SEEM RIGHT
+# if all_bugs > 0:
+#     rejected_rate = round((all_rejected / float(all_bugs)), 4)
+#     g.update_sheet(25, 2, rejected_rate)
+#     g.update_sheet(25, 4, all_rejected)
+
+# # Reopen = any VERIFIED and above to (ON DEV or ON QA) / ALL BUGS
+# all_reopened_bugs = len(get_all_reopened_bugs())
+# if all_bugs > 0:
+#     reopned_rate = round((all_reopened_bugs / float(all_bugs)), 4)
+#     g.update_sheet(22, 2, reopned_rate)
+#     g.update_sheet(22, 4, all_reopened_bugs)
+
+# # Resolution = VERIFIED / all bugs
+# all_targeted = len(get_all_bugs_targeted_to_version())
+# if all_bugs > 0:
+#     verified_rate = round((all_verified / float(all_targeted)), 4)
+#     g.update_sheet(19, 2, verified_rate)
+#     g.update_sheet(19, 4, all_verified)
 
 g.update_sheet(1, 1, f'Last update: {now.strftime("%Y-%m-%d %H:%M")}')
