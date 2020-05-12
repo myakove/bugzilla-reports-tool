@@ -302,6 +302,9 @@ def filter_by_severity(bugs, severity):
     return [bug for bug in bugs if bug.bug_severity in severity]
 
 
+def filter_by_resolution(bugs, resolution):
+    return [bug for bug in bugs if bug.resolution in resolution]
+
 def report_on_qa_blockers():
 
     def print_report(bugs):
@@ -407,7 +410,7 @@ def get_new_arrivals(version=VERSION, changed_from='-1w', changed_to="Now"):
         "j3": "OR",
         "o7": "notsubstring",
         "query_format": "advanced",
-        "target_milestone": "---",
+        #"target_release": "---",
         "classification": "Red Hat",
         "product": BUGZILLA_PRODUCT,
         "v7": "documentation",
@@ -427,11 +430,11 @@ def get_blocker_arrivals(version=VERSION, changed_from='-1w', changed_to="Now"):
         "f6": "CP",
         "f7": "flagtypes.name",
         "j3": "OR",
-        "o7": "substring",
+        "o7": "anywordssubstr",
         "query_format" : "advanced",
         "classification": "Red Hat",
         "product": BUGZILLA_PRODUCT,
-        "v7": "blocker",
+        "v7": "blocker+ blocker?",
         "f8": "component",
         "o8": "notsubstring",
         "v8": "documentation",
@@ -459,9 +462,9 @@ def get_resolved_bugs(
         "j3": "OR",
         "product": BUGZILLA_PRODUCT,
         "query_format": "advanced",
-        "f9": "flagtypes.name",
-        "o9": "substring",
-        "v9": version,
+        # "f9": "flagtypes.name",
+        # "o9": "substring",
+        # "v9": version,
     }
     bugs = bzapi.query(query)
     bugs = filter_by_status(bugs, [ON_QA, VERIFIED])
@@ -487,7 +490,7 @@ def get_qe_backlog():
 
 
 def get_bugs_per_member(
-    member_name, product='', version="",
+    member_name, product='', version='',
 ):
     query = {
         "bug_status": "ON_QA",
@@ -504,9 +507,7 @@ def get_bugs_per_member(
         "o2": "equals",
         "query_format": "advanced",
         "v2": f"{member_name}@redhat.com",
-        "f7": "flagtypes.name",
-        "o7": "substring",
-        "v7": version,
+        "target_release": version,
     }
     bugs = bzapi.query(query)
     return bugs
@@ -565,7 +566,7 @@ def get_critical_bugs():
     return bugs
 
 
-def get_regression_bugs():
+def get_regression_bugs_targeted():
     query = {
         "action" : "wrap",
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA",
@@ -588,6 +589,28 @@ def get_regression_bugs():
     bugs = filter_by_status(bugs, OPEN_BUGS_LIST_WITH_QA)
     return bugs
 
+def get_regression_bugs():
+    query = {
+        "action" : "wrap",
+        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA",
+        "classification" : "Red Hat",
+        "f0" : "OP",
+        "f2" : "keywords",
+        "f3" : "CP",
+        "j0" : "OR",
+        "o2" : "substring",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "version" : VERSION,
+        "v2" : "Regression",
+        "include_fields": [
+            "id",
+            "status",
+        ],
+    }
+    bugs = bzapi.query(query)
+    bugs = filter_by_status(bugs, OPEN_BUGS_LIST_WITH_QA)
+    return bugs
 
 def get_untriaged_bugs(version=VERSION):
     query = {
@@ -694,13 +717,13 @@ def get_all_bugs_in_version(version=VERSION):
         "f0" : "OP",
         "f2" : "CP",
         "f3" : "component",
-        "f4" : "component",
+        # "f4" : "component",
         "o3" : "notequals",
-        "o4" : "notequals",
+        # "o4" : "notequals",
         "product" : BUGZILLA_PRODUCT,
         "query_format" : "advanced",
         "v3" : "Documentation",
-        "v4" : "Release",
+        # "v4" : "Release",
         "version" : version,
         "include_fields": [
             "id",
@@ -761,60 +784,70 @@ def get_all_regression_bugs(version=VERSION):
     return bugs
 
 
-def get_all_failedqa_bugs(version=VERSION):
+# def get_all_failedqa_bugs(version=VERSION):
+#     query = {
+#         "action": "wrap",
+#         "bug_status": "__open__,__closed__",
+#         "f3": "OP",
+#         "f4": "product",
+#         "f6": "CP",
+#         "f7": "cf_verified",
+#         "j3": "OR",
+#         "o4": "equals",
+#         "o7": "substring",
+#         "query_format": "advanced",
+#         "v4": BUGZILLA_PRODUCT,
+#         "v7": "FailedQA",
+#         "f8": "component",
+#         "o8": "notsubstring",
+#         "v8": "documentation",
+#         "f9": "flagtypes.name",
+#         "o9": "substring",
+#         "v9": version,
+#         "include_fields": [
+#             "id",
+#             "status",
+#         ],
+#     }
+#     bugs = bzapi.query(query)
+#     return bugs
+
+
+def get_all_verified_bugs_closed(version=VERSION):
     query = {
-        "action": "wrap",
-        "bug_status": "__open__,__closed__",
-        "f3": "OP",
-        "f4": "product",
-        "f6": "CP",
-        "f7": "cf_verified",
-        "j3": "OR",
-        "o4": "equals",
-        "o7": "substring",
-        "query_format": "advanced",
-        "v4": BUGZILLA_PRODUCT,
-        "v7": "FailedQA",
-        "f8": "component",
-        "o8": "notsubstring",
-        "v8": "documentation",
-        "f9": "flagtypes.name",
-        "o9": "substring",
-        "v9": version,
-        "include_fields": [
-            "id",
-            "status",
-        ],
+        "bug_status" : "",
+        "f1" : "bug_status",
+        "f2" : "bug_status",
+        "f3" : "bug_status",
+        "o1" : "anywordssubstr",
+        "o2" : "changedfrom",
+        "o3" : "changedto",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : version,
+        "v1" : "VERIFIED RELEASE_PENDING CLOSED",
+        "v2" : "ON_QA",
+        "v3" : "VERIFIED"
     }
     bugs = bzapi.query(query)
     return bugs
 
-
 def get_all_verified_bugs(version=VERSION):
     query = {
+        "action" : "wrap",
         "bug_status" : "",
-        "chfield" : "bug_status",
-        "chfieldto" : "Now",
-        "chfieldvalue" : "ON_QA",
         "classification" : "Red Hat",
         "f0" : "OP",
         "f1" : "bug_status",
         "f2" : "CP",
-        "f3" : "bug_status",
-        "f4" : "bug_status",
-        "j_top" : "OR",
         "o1" : "equals",
-        "o3" : "equals",
-        "o4" : "equals",
         "product" : BUGZILLA_PRODUCT,
         "query_format" : "advanced",
         "target_release" : version,
-        "v1" : "CLOSED",
-        "v3" : "VERIFIED",
-        "v4" : "RELEASE_PENDING"
+        "v1" : "VERIFIED"
     }
     bugs = bzapi.query(query)
-    return bugs
+    return bugs    
 
 def get_verified_bugs(
     version=VERSION, changed_from='-1w', changed_to='Now'
@@ -835,9 +868,9 @@ def get_verified_bugs(
             "id",
             "status",
         ],
-        "f9": "flagtypes.name",
-        "o9": "substring",
-        "v9": version
+        # "f9": "flagtypes.name",
+        # "o9": "substring",
+        # "v9": version
     }
     bugs = bzapi.query(query)
     return bugs
@@ -851,7 +884,11 @@ def get_all_rejected_bugs(version=VERSION):
         "o2" : "notequals",
         "product" : BUGZILLA_PRODUCT,
         "query_format" : "advanced",
-        "resolution" : "EOL",
+        "include_fields": [
+            "id",
+            "status",
+            "resolution",
+        ],
         "v1" : "Documentation",
         "v2" : "Release",
         "version" : version
@@ -929,21 +966,23 @@ def get_all_failedqa_bugs(version=VERSION):
         "f3" : "bug_status",
         "f4" : "bug_status",
         "f5" : "bug_status",
-        "f6" : "bug_status",
+        "f7" : "CP",
+        "f8" : "bug_status",
         "j2" : "OR",
+        "n8" : "1",
         "o1" : "changedfrom",
         "o3" : "changedto",
         "o4" : "changedto",
         "o5" : "changedto",
-        "o6" : "changedto",
+        "o8" : "changedfrom",
         "product" : BUGZILLA_PRODUCT,
         "query_format" : "advanced",
         "target_release" : version,
         "v1" : "ON_QA",
-        "v3" : "NEW",
-        "v4" : "ASSIGNED",
-        "v5" : "POST",
-        "v6" : "MODIFIED"
+        "v3" : "ASSIGNED",
+        "v4" : "POST",
+        "v5" : "MODIFIED",
+        "v8" : "VERIFIED"
     }
     bugs = bzapi.query(query)
     return bugs
@@ -951,34 +990,38 @@ def get_all_failedqa_bugs(version=VERSION):
 def get_all_reopened_bugs(version=VERSION):
     query = {
         "bug_status" : "",
-        "f10" : "bug_status",
-        "f2" : "OP",
-        "f3" : "bug_status",
-        "f4" : "bug_status",
+        "f10" : "CP",
+        "f11" : "OP",
+        "f12" : "bug_status",
+        "f13" : "bug_status",
+        "f14" : "bug_status",
+        "f4" : "OP",
         "f5" : "bug_status",
         "f6" : "bug_status",
-        "f7" : "OP",
+        "f7" : "bug_status",
         "f8" : "bug_status",
         "f9" : "bug_status",
-        "j2" : "OR",
-        "j7" : "OR",
-        "o10" : "changedfrom",
-        "o3" : "changedto",
-        "o4" : "changedto",
+        "j11" : "OR",
+        "j4" : "OR",
+        "o12" : "changedfrom",
+        "o13" : "changedfrom",
+        "o14" : "changedfrom",
         "o5" : "changedto",
         "o6" : "changedto",
-        "o8" : "changedfrom",
-        "o9" : "changedfrom",
+        "o7" : "changedto",
+        "o8" : "changedto",
+        "o9" : "changedto",
         "product" : BUGZILLA_PRODUCT,
         "query_format" : "advanced",
-        "v10" : "CLOSED",
-        "v3" : "NEW",
-        "v4" : "ASSIGNED",
-        "v5" : "POST",
-        "v6" : "MODIFIED",
-        "v8" : "VERIFIED",
-        "v9" : "RELEASE_PENDING",
-        "version" : version
+        "target_release" : version,
+        "v12" : "VERIFIED",
+        "v13" : "RELEASE_PENDING",
+        "v14" : "CLOSED",
+        "v5" : "NEW",
+        "v6" : "ASSIGNED",
+        "v7" : "MODIFIED",
+        "v8" : "POST",
+        "v9" : "ON_QA"
     }
     bugs = bzapi.query(query)
     return bugs
@@ -1109,15 +1152,23 @@ def get_stability_bugs(version=VERSION):
     bugs = filter_by_status(bugs, OPEN_BUGS_LIST)
     return bugs
 
-def get_blockers_list():
+def get_blockers_list(version=VERSION):
     query = {
-        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_QA",
-        "f10" : "keywords",
-        "f11" : "keywords",
-        "f12" : "flagtypes.name",
-        "f3" : "OP",
-        "f6" : "CP",
-        "f8" : "flagtypes.name",
+        "bug_status" : "",
+        "f1" : "bug_status",
+        "f2" : "OP",
+        "f3" : "flagtypes.name",
+        "f4" : "keywords",
+        "j2" : "OR",
+        "o1" : "anywordssubstr",
+        "o3" : "anywordssubstr",
+        "o4" : "anywordssubstr",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : version,
+        "v1" : "NEW ASSIGNED POST MODIFIED ON_QA",
+        "v3" : "blocker+ blocker?",
+        "v4" : "TestBlocker AutomationBlocker",
         "include_fields" : [
             "id",
             "component",
@@ -1126,29 +1177,25 @@ def get_blockers_list():
             "flags",
             "keywords"
         ],
-        "j5" : "OR",
-        "j_top" : "OR",
-        "o10" : "substring",
-        "o11" : "substring",
-        "o12" : "anywordssubstr",
-        "o8" : "anywordssubstr",
-        "product" : BUGZILLA_PRODUCT,
-        "query_format" : "advanced",
-        "target_release" : VERSION,
-        "v10" : "TestBlocker",
-        "v11" : "AutomationBlocker",
-        "v12" : "blocker?",
-        "v8" : "blocker+"
     }
     bugs = bzapi.query(query)
     return bugs
 
-def get_urgent_list():
+def get_urgent_list(version=VERSION):
     query = {
         "bug_severity" : "urgent",
-        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_QA",
-        "f3" : "OP",
-        "f6" : "CP",
+        "bug_status" : "",
+        "f1" : "bug_status",
+        "f2" : "OP",
+        "f4" : "keywords",
+        "j2" : "OR",
+        "o1" : "anywordssubstr",
+        "o4" : "nowordssubstr",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : version,
+        "v1" : "NEW ASSIGNED POST MODIFIED ON_QA",
+        "v4" : "FutureFeature, Improvement, ",
         "include_fields" : [
             "id",
             "component",
@@ -1157,12 +1204,6 @@ def get_urgent_list():
             "flags",
             "keywords"
         ],
-        "j5" : "OR",
-        "keywords" : "FutureFeature, Improvement, ",
-        "keywords_type" : "nowords",
-        "product" : BUGZILLA_PRODUCT,
-        "query_format" : "advanced",
-        "target_release" : VERSION
     }
     bugs = bzapi.query(query)
     return bugs

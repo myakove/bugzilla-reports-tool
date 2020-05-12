@@ -14,11 +14,11 @@ for member in TEAM_MEMBERS:
         'layered_bugs': None,
     }
     qe_backlog = get_bugs_per_member(
-        member, BUGZILLA_PRODUCT, version=BUGZILLA_VERSION_FLAG
+        member, BUGZILLA_PRODUCT, version=VERSION
     )
     bug_to_member[member]['product_bugs'] = qe_backlog if qe_backlog else []
     if LAYERED_PRODUCT:
-        layered_qe_backlog = get_bugs_per_member(member, LAYERED_PRODUCT)
+        layered_qe_backlog = get_bugs_per_member(member, LAYERED_PRODUCT, LAYRED_PRODUCT_VERSION)
         bug_to_member[member][
             'layered_bugs'
         ] = layered_qe_backlog if layered_qe_backlog else []

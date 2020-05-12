@@ -1,21 +1,7 @@
 #!/usr/bin/env python
-import time
 from helpers import *
 import datetime
 
-
-DEV_RESOLUTIONS = {
-    'WONTFIX':2,
-    'DEFERED':3,
-    'UPSTREAM':4,
-    'CANTFIX':5
-}
-QE_RESOLUTIONS = {
-    'NOTABUG':10,
-    'WORKSFORME':11,
-    'DUPLICATE':12,
-    'INSUFFICIENT_DATA':13
-}
 
 now = datetime.datetime.now()
 g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "Closed_bugs")

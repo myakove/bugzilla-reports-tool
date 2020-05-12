@@ -31,7 +31,8 @@ VERSION = g.get_cell_value(2, 4)
 # # ocs-4.2.0 --> ocs-x.y.z so you'll need to add only ocs-4.2 in order to see
 # # all bugs in version x.y
 BUGZILLA_VERSION_FLAG = g.get_cell_value(2, 3)
-LAYERED_PRODUCT = g.get_cell_value(10, 4)
+LAYERED_PRODUCT = g.get_cell_value(4, 2)
+LAYRED_PRODUCT_VERSION = g.get_cell_value(4, 3)
 
 # [CHANGE NEEDED] List here all the teams you want to sample, for example:
 team1 = "virt"
@@ -70,17 +71,16 @@ while True:
 # [CHANGE NEEDED] Add *ALL* the product components exist in Bugzilla for your
 # product
 COMPONENTS = {
-    'Documentation': [],
-    'Release': [],
     'Installation': [],
     'Virtualization': [],
     'Networking': [],
     'Storage': [],
     'Providers': [],
-    'RFE': [],
     'V2V': [],
     'Guest Support': [],
     'SSP': [],
+    'Entitlements': [],
+    'User Experience': [],
 }
 
 backlog = {}
@@ -107,3 +107,17 @@ MISSING_ACK = [
 NEEDINFO = "needinfo?"
 QUALITY_IMPACT = "quality_impact="
 
+DEV_RESOLUTIONS = {
+    'WONTFIX':2,
+    'DEFERRED':3,
+    'UPSTREAM':4,
+    'CANTFIX':5,
+    'EOL':6,
+}
+
+QE_RESOLUTIONS = {
+    'NOTABUG':10,
+    'WORKSFORME':11,
+    'DUPLICATE':12,
+    'INSUFFICIENT_DATA':13,
+}

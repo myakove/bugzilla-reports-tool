@@ -22,7 +22,7 @@ g.update_sheet(6, 6, candidate_blockers)
 critical_bugs = len(get_critical_bugs())
 g.update_sheet(6, 7, critical_bugs)
 
-regressions = len(get_regression_bugs())
+regressions = len(get_regression_bugs_targeted())
 g.update_sheet(6, 8, regressions)
 
 untriaged = len(get_untriaged_bugs())
