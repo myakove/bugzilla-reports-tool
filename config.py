@@ -32,7 +32,7 @@ VERSION = g.get_cell_value(2, 4)
 # # all bugs in version x.y
 BUGZILLA_VERSION_FLAG = g.get_cell_value(2, 3)
 LAYERED_PRODUCT = g.get_cell_value(4, 2)
-LAYRED_PRODUCT_VERSION = g.get_cell_value(4, 3)
+LAYERED_PRODUCT_VERSION = g.get_cell_value(4, 3)
 
 # [CHANGE NEEDED] List here all the teams you want to sample, for example:
 team1 = "virt"

@@ -471,13 +471,31 @@ def get_resolved_bugs(
     return filter_only_bugs(bugs)
 
 
-def get_qe_backlog():
+def get_qe_backlog(product=BUGZILLA_PRODUCT, target_version=VERSION):
     query = {
         "bug_status": "ON_QA",
         "classification" : "Red Hat",
         "query_format": "advanced",
-        "product": BUGZILLA_PRODUCT,
-        "target_release": VERSION,
+        "product": product,
+        "target_release": target_version,
+        "include_fields": [
+            "id",
+            "status",
+            "qa_contact",
+            "severity"
+        ],
+    }
+    bugs = bzapi.query(query)
+    return bugs
+
+def get_qe_backlog_by_component(product=BUGZILLA_PRODUCT, target_version=VERSION, component=""):
+    query = {
+        "bug_status": "ON_QA",
+        "classification" : "Red Hat",
+        "query_format": "advanced",
+        "product": product,
+        "component" : component,
+        "target_release": target_version,
         "include_fields": [
             "id",
             "status",
@@ -513,7 +531,7 @@ def get_bugs_per_member(
     return bugs
 
 
-def get_dev_backlog(version=VERSION):
+def get_dev_backlog(product=BUGZILLA_PRODUCT, version=VERSION):
     query = {
 
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV",
@@ -522,7 +540,7 @@ def get_dev_backlog(version=VERSION):
         "f7" : "component",
         "n7" : "1",
         "o7" : "equals",
-        "product" : BUGZILLA_PRODUCT,
+        "product" : product,
         "query_format" : "advanced",
         "target_release" : version,
         "v7" : "Documentation",
@@ -542,6 +560,26 @@ def get_dev_backlog(version=VERSION):
     bugs = filter_by_status(bugs, OPEN_BUGS_LIST)
     return bugs
 
+def get_dev_backlog_by_component(product=BUGZILLA_PRODUCT, target_version=VERSION, component=""):
+    query = {
+        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV",
+        "classification" : "Red Hat",
+        "component" : component,
+        "include_fields" : [
+            "id",
+            "status",
+            "summary",
+            "target_release",
+            "severity",
+            "qa_contact"
+        ],
+        "product" : product,
+        "query_format" : "advanced",
+        "target_release" : target_version
+    }
+    bugs = bzapi.query(query)
+    bugs = filter_by_status(bugs, OPEN_BUGS_LIST)
+    return bugs
 
 def get_critical_bugs():
     bugs = []
@@ -697,12 +735,25 @@ def get_scale_blockers():
     return bugs
 
 
-def get_overall_backlog(version=VERSION):
+def get_overall_backlog():
     query = {
         "action" : "wrap",
         "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA",
         "classification" : "Red Hat",
         "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+    }
+    bugs = bzapi.query(query)
+    bugs = filter_by_status(bugs, OPEN_BUGS_LIST_WITH_QA)
+    return bugs
+
+def get_overall_backlog_by_component(product=BUGZILLA_PRODUCT, component=""):
+    query = {
+        "action" : "wrap",
+        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA",
+        "classification" : "Red Hat",
+        "product" : product,
+        "component" : component,
         "query_format" : "advanced",
     }
     bugs = bzapi.query(query)
@@ -1239,4 +1290,32 @@ def get_untargeted_bugs():
     }
     bugs = bzapi.query(query)
     bugs = filter_by_status(bugs, OPEN_BUGS_LIST_WITH_QA)
+    return bugs
+
+def get_dependent_product_bugs(severity=""):
+    query = {
+        "bug_status" : "NEW,ASSIGNED,POST,MODIFIED,ON_DEV,ON_QA",
+        "classification" : "Red Hat",
+        "f1" : "dependent_products",
+        "f2" : "component",
+        "f3" : "status_whiteboard",
+        "include_fields" : [
+            "id",
+            "product",
+            "component",
+            "status",
+            "severity",
+        ],
+        "j_top" : "OR",
+        "o1" : "substring",
+        "o2" : "equals",
+        "o3" : "casesubstring",
+        "query_format" : "advanced",
+        "v1" : "CNV",
+        "v2" : "Compute Resources - CNV",
+        "v3" : "Telco:CNV",
+    }
+    if severity:
+        query["bug_severity"] = severity
+    bugs = bzapi.query(query)
     return bugs
