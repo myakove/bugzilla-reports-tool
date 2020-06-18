@@ -18,7 +18,7 @@ for member in TEAM_MEMBERS:
     )
     bug_to_member[member]['product_bugs'] = qe_backlog if qe_backlog else []
     if LAYERED_PRODUCT:
-        layered_qe_backlog = get_bugs_per_member(member, LAYERED_PRODUCT, LAYRED_PRODUCT_VERSION)
+        layered_qe_backlog = get_bugs_per_member(member, LAYERED_PRODUCT, LAYERED_PRODUCT_VERSION)
         bug_to_member[member][
             'layered_bugs'
         ] = layered_qe_backlog if layered_qe_backlog else []

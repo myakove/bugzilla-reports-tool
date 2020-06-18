@@ -23,6 +23,7 @@ overall_backlog = len(get_overall_backlog_by_component(
     component="Console Kubevirt Plugin")
     )
 g.update_sheet(6, 5, overall_backlog)
+time.sleep(30)
 
 # QUERY DOESNT WORK AS EXPECTED
 all_affecting_product_urgent = len(get_dependent_product_bugs("urgent"))

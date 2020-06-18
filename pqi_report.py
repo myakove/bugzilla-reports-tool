@@ -50,9 +50,9 @@ if all_targeted > 0:
     reopned_rate = round((all_reopened / float(all_targeted)), 2)
 
 # Resolution = VERIFIED / all targeted
-all_verified = len(get_all_verified_bugs())
+all_resolved = len(get_all_verified_bugs())
 if all_targeted > 0:
-    resolution_rate = round((all_verified / float(all_targeted)), 2)
+    resolution_rate = round((all_resolved / float(all_targeted)), 2)
 
 # FailedQA = MOVED FROM ON_QA to ON DEV / ALL BUGS targeted
 all_failedqa = -1
@@ -68,9 +68,9 @@ worksheet.insert_rows(
          now.strftime("%m-%d"), len(new), len(assigned),
          len(post), len(modified), len(qe_backlog), len(overall_backlog), 
          regression_rate, all_regressions, 
-         resolution_rate, all_verified,
+         resolution_rate, all_resolved,
          reopned_rate, all_reopened,
-         verification_rate, all_verified,
+         verification_rate, all_verified_closed,
          rejected_rate, all_rejected,
          failed_qa_rate, all_failedqa,
          "=sum(B2:F2)"

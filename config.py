@@ -121,3 +121,8 @@ QE_RESOLUTIONS = {
     'DUPLICATE':12,
     'INSUFFICIENT_DATA':13,
 }
+
+KEYWORD_FILTER = ['ABIAssurance', 'TechPreview', 'ReleaseNotes', 
+                    'Tracking', 'Task', 'HardwareEnablement',
+                    'SecurityTracking', 'TestOnly', 'Improvement',
+                    'FutureFeature']
