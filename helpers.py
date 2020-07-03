@@ -307,17 +307,9 @@ def filter_by_resolution(bugs, resolution):
 
 def filter_by_no_keywords(bugs, keywords):
     filtered_list = []
-    print('Before:')
-    print(len(bugs))
     for bug in bugs:
         if not any(x in bug.keywords for x in keywords):
-            try:
-                print (bug)
-            except:
-                print('no bug data')
             filtered_list.append(bug)
-    print('After:')
-    print(len(filtered_list))
     return filtered_list
 
 def report_on_qa_blockers():

@@ -27,13 +27,13 @@ for idx, bug in enumerate(blockers_list):
     g.update_sheet(row, column+8, flags)
     g.update_sheet(row, column+9, ' '.join(bug.keywords))
 
-g.clean_rows(2, 6 + len(blockers_list), 15)
+g.clean_rows(2, 6 + len(blockers_list), 25)
 # Sleep to ensure no exception will raise from Google API due to writes limit
 time.sleep(40)
 
 urgent_list = get_urgent_list()
 for idx, bug in enumerate(urgent_list):
-    row = 19 + idx
+    row = 28 + idx
     column = 2
     g.update_sheet(
         row,
@@ -52,7 +52,7 @@ for idx, bug in enumerate(urgent_list):
     g.update_sheet(row, column+8, flags)
     g.update_sheet(row, column+9, ' '.join(bug.keywords))
 
-g.clean_rows(2, 19 + len(urgent_list), 28)
+g.clean_rows(2, 28 + len(urgent_list), 38)
 # Sleep to ensure no exception will raise from Google API due to writes limit
 time.sleep(40)
 
