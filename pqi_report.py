@@ -23,6 +23,7 @@ overall_backlog = get_overall_backlog()
 
 # Regression rate = all bugs with REGRESSION keyword / all bugs in version
 all_bugs = len(get_all_bugs_in_version())
+regression_rate = 0
 all_regressions = len(get_all_regression_bugs())
 if all_bugs > 0:
     regression_rate = round((all_regressions / float(all_bugs)), 2)
@@ -30,11 +31,13 @@ if all_bugs > 0:
 # Verification rate = VERIFIED+RELEASE PENDING+CLOSED / was ON QA
 all_bugs_was_on_qa = len(get_all_was_on_qa_bugs())
 all_verified_closed = len(get_all_verified_bugs_closed())
+verification_rate = 0
 if all_bugs_was_on_qa > 0:
     verification_rate = round((all_verified_closed / float(all_bugs_was_on_qa)), 2)
 
 # Rejected = CLOSED (NOT A BUG, WORKS FOR ME, DUPLICATE, INSOFFICIENT DATA, EOL, DEFFERED. CANT FIX, WONT FIX) / ALL BUGS
 resolution_list = list(DEV_RESOLUTIONS.keys()) + list(QE_RESOLUTIONS.keys())
+rejected_rate = 0
 all_rejected = len(filter_by_resolution(get_all_rejected_bugs(),resolution_list))
 if all_bugs > 0:
     rejected_rate = round((all_rejected / float(all_bugs)), 2)
@@ -51,6 +54,7 @@ if all_targeted > 0:
 
 # Resolution = VERIFIED / all targeted
 all_resolved = len(get_all_verified_bugs())
+resolution_rate = 0
 if all_targeted > 0:
     resolution_rate = round((all_resolved / float(all_targeted)), 2)
 

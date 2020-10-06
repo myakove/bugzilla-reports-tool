@@ -469,9 +469,7 @@ def get_resolved_bugs(
         "j3": "OR",
         "product": BUGZILLA_PRODUCT,
         "query_format": "advanced",
-        # "f9": "flagtypes.name",
-        # "o9": "substring",
-        # "v9": version,
+        "target_release" : version,
     }
     bugs = bzapi.query(query)
     bugs = filter_by_status(bugs, [ON_QA, VERIFIED])
@@ -809,10 +807,12 @@ def get_all_bugs_targeted_to_version(version=VERSION):
          "include_fields": [
             "id",
             "status",
+            "keywords"
         ],
     }
     bugs = bzapi.query(query)
-    return bugs
+    return filter_by_no_keywords(bugs, KEYWORD_FILTER)
+
 
 def get_all_regression_bugs(version=VERSION):
     query = {
@@ -924,24 +924,19 @@ def get_verified_bugs(
     version=VERSION, changed_from='-1w', changed_to='Now'
 ):
     query = {
-        "bug_status": "",
-        "chfield": "bug_status",
+        "bug_status" : "",
+        "chfield" : "bug_status",
         "chfieldfrom": changed_from,
         "chfieldto": changed_to,
-        "chfieldvalue": "VERIFIED",
+        "chfieldvalue" : "VERIFIED",
         "classification": "Red Hat",
-        "f3": "OP",
-        "f6": "CP",
-        "j3": "OR",
-        "product": BUGZILLA_PRODUCT,
-        "query_format": "advanced",
+        "product" : BUGZILLA_PRODUCT,
+        "query_format" : "advanced",
+        "target_release" : version,
         "include_fields": [
             "id",
             "status",
         ],
-        # "f9": "flagtypes.name",
-        # "o9": "substring",
-        # "v9": version
     }
     bugs = bzapi.query(query)
     return bugs
