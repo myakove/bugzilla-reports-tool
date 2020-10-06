@@ -81,6 +81,8 @@ COMPONENTS = {
     'SSP': [],
     'Entitlements': [],
     'User Experience': [],
+    'Metrics': [],
+    'Logging': [],
 }
 
 backlog = {}
