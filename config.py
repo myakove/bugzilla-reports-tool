@@ -1,28 +1,31 @@
-import bugzilla
-import yaml
-import sys
 import os
+import sys
+
+import bugzilla
 import google_api as gapi
-from personal_config import *
+import yaml
+from helpers import google_spread_sheet_api
+
 
 # # [CHANGE NEEDED] Add the relevant information for you report
-cfg_path = os.path.expanduser('~/.gapi/personal_cfg.yml')
+cfg_path = os.path.expanduser("~/.gapi/personal_cfg.yml")
 
 if len(sys.argv) != 2:
     raise IndexError("You must provide the spreadsheet name to work with")
 
 SPREADSHEET_NAME = sys.argv[1]
-with open(cfg_path, 'r') as ymlfile:
+with open(cfg_path, "r") as ymlfile:
     cfg = yaml.full_load(ymlfile)
-    USER = cfg['bugzilla']['user']
-    PASSWORD = cfg['bugzilla']['password']
+    USER = cfg["bugzilla"]["user"]
+    PASSWORD = cfg["bugzilla"]["password"]
 
 #     # For the Bugzilla reports
 #     gmail_user = cfg['bugzilla_report']['gmail_address']
 #     gmail_pwd = cfg['bugzilla_report']['gmail_pass']
 #     mail_to = USER
 
-g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "Dashboard configuration")
+g = google_spread_sheet_api(sheet_name="Dashboard configuration")
+
 
 PRODUCT = g.get_cell_value(2, 1)
 BUGZILLA_PRODUCT = g.get_cell_value(2, 2)
@@ -42,13 +45,7 @@ team4 = "infra"
 
 all_team = [team1, team2, team3]
 
-severity = {
-    "urgent": 1,
-    "high": 2,
-    "medium": 3,
-    "low": 4,
-    "unspecified": 5
-}
+severity = {"urgent": 1, "high": 2, "medium": 3, "low": 4, "unspecified": 5}
 
 BUGS_BY_TEAM = {
     team1: [],
@@ -58,7 +55,7 @@ BUGS_BY_TEAM = {
 
 team_members_g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "QE_team_member")
 
-TEAM_MEMBERS = list()
+TEAM_MEMBERS = []
 idx = 1
 while True:
     member = team_members_g.get_cell_value(idx, 1)
@@ -71,18 +68,18 @@ while True:
 # [CHANGE NEEDED] Add *ALL* the product components exist in Bugzilla for your
 # product
 COMPONENTS = {
-    'Installation': [],
-    'Virtualization': [],
-    'Networking': [],
-    'Storage': [],
-    'Providers': [],
-    'V2V': [],
-    'Guest Support': [],
-    'SSP': [],
-    'Entitlements': [],
-    'User Experience': [],
-    'Metrics': [],
-    'Logging': [],
+    "Installation": [],
+    "Virtualization": [],
+    "Networking": [],
+    "Storage": [],
+    "Providers": [],
+    "V2V": [],
+    "Guest Support": [],
+    "SSP": [],
+    "Entitlements": [],
+    "User Experience": [],
+    "Metrics": [],
+    "Logging": [],
 }
 
 backlog = {}
@@ -101,30 +98,34 @@ OPEN_BUGS_LIST_WITH_QA = ["NEW", "ASSIGNED", "POST", "MODIFIED", "ON_DEV", "ON_Q
 # Bug flags
 BLOCKER = "blocker+"
 CANDIDATE_BLOCKER = "blocker?"
-MISSING_ACK = [
-    "pm_ack?",
-    "devel_ack?",
-    "qa_ack?"
-]
+MISSING_ACK = ["pm_ack?", "devel_ack?", "qa_ack?"]
 NEEDINFO = "needinfo?"
 QUALITY_IMPACT = "quality_impact="
 
 DEV_RESOLUTIONS = {
-    'WONTFIX':2,
-    'DEFERRED':3,
-    'UPSTREAM':4,
-    'CANTFIX':5,
-    'EOL':6,
+    "WONTFIX": 2,
+    "DEFERRED": 3,
+    "UPSTREAM": 4,
+    "CANTFIX": 5,
+    "EOL": 6,
 }
 
 QE_RESOLUTIONS = {
-    'NOTABUG':10,
-    'WORKSFORME':11,
-    'DUPLICATE':12,
-    'INSUFFICIENT_DATA':13,
+    "NOTABUG": 10,
+    "WORKSFORME": 11,
+    "DUPLICATE": 12,
+    "INSUFFICIENT_DATA": 13,
 }
 
-KEYWORD_FILTER = ['ABIAssurance', 'TechPreview', 'ReleaseNotes', 
-                    'Tracking', 'Task', 'HardwareEnablement',
-                    'SecurityTracking', 'TestOnly', 'Improvement',
-                    'FutureFeature']
+KEYWORD_FILTER = [
+    "ABIAssurance",
+    "TechPreview",
+    "ReleaseNotes",
+    "Tracking",
+    "Task",
+    "HardwareEnablement",
+    "SecurityTracking",
+    "TestOnly",
+    "Improvement",
+    "FutureFeature",
+]

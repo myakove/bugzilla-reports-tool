@@ -1,15 +1,18 @@
 #!/usr/bin/env python
-from helpers import *
+import helpers
+from config import BUGZILLA_VERSION_FLAG
 
-g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "component_distribution")
 
-all_bugs = get_overall_backlog(version=BUGZILLA_VERSION_FLAG)
-component_dict = filter_by_component(all_bugs)
+g = helpers.google_spread_sheet_api(sheet_name="component_distribution")
+
+
+all_bugs = helpers.get_overall_backlog(version=BUGZILLA_VERSION_FLAG)
+component_dict = helpers.filter_by_component(all_bugs)
 for idx, comp in enumerate(component_dict):
-    urgent_bugs = len(filter_by_severity(component_dict[comp], 'urgent'))
-    high_bugs = len(filter_by_severity(component_dict[comp], 'high'))
-    medium_bugs = len(filter_by_severity(component_dict[comp], 'medium'))
-    low_bugs = len(filter_by_severity(component_dict[comp], 'low'))
+    urgent_bugs = len(helpers.filter_by_severity(component_dict[comp], "urgent"))
+    high_bugs = len(helpers.filter_by_severity(component_dict[comp], "high"))
+    medium_bugs = len(helpers.filter_by_severity(component_dict[comp], "medium"))
+    low_bugs = len(helpers.filter_by_severity(component_dict[comp], "low"))
 
     row = 2 + idx
     column = 1

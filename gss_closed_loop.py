@@ -1,25 +1,25 @@
 #!/usr/bin/env python
-from helpers import *
 from datetime import datetime
 
-g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "GSS closed loop")
+import helpers
+
+
+g = helpers.google_spread_sheet_api(sheet_name="GSS closed loop")
 now = datetime.today()
 
-open_gss = get_gss_closed_loop("qe_test_coverage?")
-acked_gss = get_gss_closed_loop("qe_test_coverage+")
-naked_gss = get_gss_closed_loop("qe_test_coverage-")
-g.insert_row(
-    [now.strftime("%Y-%m-%d"), len(open_gss), len(acked_gss), len(naked_gss)]
-)
+open_gss = helpers.get_gss_closed_loop("qe_test_coverage?")
+acked_gss = helpers.get_gss_closed_loop("qe_test_coverage+")
+naked_gss = helpers.get_gss_closed_loop("qe_test_coverage-")
+g.insert_row([now.strftime("%Y-%m-%d"), len(open_gss), len(acked_gss), len(naked_gss)])
 
-g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "component_distribution")
-all_gss_bugs = (open_gss + acked_gss + naked_gss)
-component_dict = filter_by_component(all_gss_bugs, verify_status=False)
+g = helpers.google_spread_sheet_api(sheet_name="component_distribution")
+all_gss_bugs = open_gss + acked_gss + naked_gss
+component_dict = helpers.filter_by_component(all_gss_bugs, verify_status=False)
 for idx, comp in enumerate(component_dict):
-    urgent_bugs = len(filter_by_severity(component_dict[comp], 'urgent'))
-    high_bugs = len(filter_by_severity(component_dict[comp], 'high'))
-    medium_bugs = len(filter_by_severity(component_dict[comp], 'medium'))
-    low_bugs = len(filter_by_severity(component_dict[comp], 'low'))
+    urgent_bugs = len(helpers.filter_by_severity(component_dict[comp], "urgent"))
+    high_bugs = len(helpers.filter_by_severity(component_dict[comp], "high"))
+    medium_bugs = len(helpers.filter_by_severity(component_dict[comp], "medium"))
+    low_bugs = len(helpers.filter_by_severity(component_dict[comp], "low"))
 
     row = 21 + idx
     column = 1

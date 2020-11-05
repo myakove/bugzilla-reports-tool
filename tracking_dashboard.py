@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-import time
-from helpers import *
 import datetime
+import time
+
+import helpers
+
 
 now = datetime.datetime.now()
-g = gapi.GoogleSpreadSheetAPI(SPREADSHEET_NAME, "QE tracking dashboard")
+g = helpers.google_spread_sheet_api(sheet_name="QE tracking dashboard")
 
-blockers_list = get_blockers_list()
+blockers_list = helpers.get_blockers_list()
 for idx, bug in enumerate(blockers_list):
     row = 6 + idx
     column = 2
@@ -16,23 +18,23 @@ for idx, bug in enumerate(blockers_list):
         (
             f'=HYPERLINK("https://bugzilla.redhat.com/show_bug'
             f'.cgi?id={bug.bug_id}", "{bug.bug_id}")'
-        )
+        ),
     )
-    g.update_sheet(row, column+1, bug.summary)
-    g.update_sheet(row, column+6, bug.status)
-    g.update_sheet(row, column+7, bug.component)
-    flags = ''
+    g.update_sheet(row, column + 1, bug.summary)
+    g.update_sheet(row, column + 6, bug.status)
+    g.update_sheet(row, column + 7, bug.component)
+    flags = ""
     for flag in bug.flags:
-        flags += flag.get('name') + flag.get('status') + ' '
-    g.update_sheet(row, column+8, flags)
-    g.update_sheet(row, column+9, ' '.join(bug.keywords))
+        flags += flag.get("name") + flag.get("status") + " "
+    g.update_sheet(row, column + 8, flags)
+    g.update_sheet(row, column + 9, " ".join(bug.keywords))
     time.sleep(5)
 
 g.clean_rows(2, 6 + len(blockers_list), 25)
 # Sleep to ensure no exception will raise from Google API due to writes limit
 time.sleep(30)
 
-urgent_list = get_urgent_list()
+urgent_list = helpers.get_urgent_list()
 for idx, bug in enumerate(urgent_list):
     row = 28 + idx
     column = 2
@@ -42,16 +44,16 @@ for idx, bug in enumerate(urgent_list):
         (
             f'=HYPERLINK("https://bugzilla.redhat.com/show_bug'
             f'.cgi?id={bug.bug_id}", "{bug.bug_id}")'
-        )
+        ),
     )
-    g.update_sheet(row, column+1, bug.summary)
-    g.update_sheet(row, column+6, bug.status)
-    g.update_sheet(row, column+7, bug.component)
-    flags = ''
+    g.update_sheet(row, column + 1, bug.summary)
+    g.update_sheet(row, column + 6, bug.status)
+    g.update_sheet(row, column + 7, bug.component)
+    flags = ""
     for flag in bug.flags:
-        flags += flag.get('name') + flag.get('status') + ' '
-    g.update_sheet(row, column+8, flags)
-    g.update_sheet(row, column+9, ' '.join(bug.keywords))
+        flags += flag.get("name") + flag.get("status") + " "
+    g.update_sheet(row, column + 8, flags)
+    g.update_sheet(row, column + 9, " ".join(bug.keywords))
     time.sleep(5)
 
 g.clean_rows(2, 28 + len(urgent_list), 38)

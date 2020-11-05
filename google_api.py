@@ -6,6 +6,7 @@ In order to create a new spreadsheet, share the spreadsheet with the
 
 """
 import os
+
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -14,16 +15,15 @@ class GoogleSpreadSheetAPI(object):
     """
     A class to interact with Google Spreadsheet
     """
+
     def __init__(self, spreadsheet_name, sheet_name):
         # use creds to create a client to interact with the Google Drive API
         scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
         ]
-        google_api = os.path.expanduser('~/.gapi/google_api_secret.json')
-        creds = ServiceAccountCredentials.from_json_keyfile_name(
-            google_api, scope
-        )
+        google_api = os.path.expanduser("~/.gapi/google_api_secret.json")
+        creds = ServiceAccountCredentials.from_json_keyfile_name(google_api, scope)
         client = gspread.authorize(creds)
         self.sheet = client.open(spreadsheet_name).worksheet(sheet_name)
 

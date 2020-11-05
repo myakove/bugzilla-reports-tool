@@ -1,0 +1,4 @@
+python-bugzilla
+pyyaml
+gspread
+oauth2client
